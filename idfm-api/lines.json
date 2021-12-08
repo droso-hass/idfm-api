@@ -1,0 +1,51 @@
+{
+    "train": {
+        "RER A": "line:IDFM:C01742",
+        "RER B": "line:IDFM:C01743",
+        "RER C": "line:IDFM:C01727",
+        "RER D": "line:IDFM:C01728",
+        "RER E": "line:IDFM:C01729",
+        "Train H": "line:IDFM:C01737",
+        "Train J": "line:IDFM:C01739",
+        "Train K": "line:IDFM:C01738",
+        "Train L": "line:IDFM:C01740",
+        "Train N": "line:IDFM:C01736",
+        "Train P": "line:IDFM:C01730",
+        "Train R": "line:IDFM:C01731",
+        "Train U": "line:IDFM:C01741"
+    },
+    "metro": {
+        "Métro 1": "line:IDFM:C01371",
+        "Métro 2": "line:IDFM:C01372",
+        "Métro 3": "line:IDFM:C01373",
+        "Métro 3B": "line:IDFM:C01386",
+        "Métro 4": "line:IDFM:C01374",
+        "Métro 5": "line:IDFM:C01375",
+        "Métro 6": "line:IDFM:C01376",
+        "Métro 7": "line:IDFM:C01377",
+        "Métro 7B": "line:IDFM:C01387",
+        "Métro 8": "line:IDFM:C01378",
+        "Métro 9": "line:IDFM:C01379",
+        "Métro 10": "line:IDFM:C01380",
+        "Métro 11": "line:IDFM:C01381",
+        "Métro 12": "line:IDFM:C01382",
+        "Métro 13": "line:IDFM:C01383",
+        "Métro 14": "line:IDFM:C01384",
+        "Navette CDG VAL": "line:IDFM:C00563",
+        "Navette ORLYVAL": "line:IDFM:C01388",
+        "Navette FUN": "line:IDFM:C01385"
+    },
+    "tramway": {
+        "Tramway T1": "line:IDFM:C01389",
+        "Tramway T2": "line:IDFM:C01390",
+        "Tramway T3a": "line:IDFM:C01391",
+        "Tramway T3b": "line:IDFM:C01679",
+        "Tramway T4": "line:IDFM:C01843",
+        "Tramway T5": "line:IDFM:C01684",
+        "Tramway T6": "line:IDFM:C01794",
+        "Tramway T7": "line:IDFM:C01774",
+        "Tramway T8": "line:IDFM:C01795",
+        "Tramway T9": "line:IDFM:C02317",
+        "Tramway T11": "line:IDFM:C01999"
+    }
+}
