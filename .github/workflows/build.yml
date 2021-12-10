@@ -1,8 +1,9 @@
 name: Build and Publish python package
 
 on:
-  release:
-    types: [created]
+  create:
+    tags:
+      - '*'
   workflow_call:
     secrets:
       PYPI_API_TOKEN:
