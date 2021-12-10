@@ -20,5 +20,5 @@ data = {}
 for i in items:
     data[i] = get_lines(i)
 
-with open("idfm-api/lines.json", "w", encoding="utf8") as f:
+with open("idfm_api/lines.json", "w", encoding="utf8") as f:
     json.dump(data, f, ensure_ascii=False)
