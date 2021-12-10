@@ -7,6 +7,9 @@ from idfm_api.utils import strip_html
 
 @unique
 class InfoSeverity(IntEnum):
+    """
+    Represents the serverity of an event
+    """
     INFO = 0 # informative message
     WARNING = 1 # non blocking perturbation
     ERROR = 2 # blocking perturbation (usually planned)
@@ -14,18 +17,27 @@ class InfoSeverity(IntEnum):
 
 @unique
 class TransportType(Enum):
+    """
+    Represents the type of transport
+    """
     METRO = "metro"
     TRAM = "tramway"
     TRAIN = "train"
 
 @dataclass(frozen=True)
 class LineData:
+    """
+    Represents a line of a transport
+    """
     name: str
     id: str
     type: TransportType
 
 @dataclass(frozen=True)
 class StopData:
+    """
+    Represents a stop area of a line
+    """
     name: str
     id: str
     x: float
@@ -39,6 +51,9 @@ class StopData:
 
 @dataclass(frozen=True)
 class InfoData:
+    """
+    Represents a traffic information fragment
+    """
     id: str
     name: str
     message: str
@@ -54,6 +69,9 @@ class InfoData:
 @dataclass(frozen=True)
 @total_ordering
 class TrafficData:
+    """
+    Represents a schedule for a specific path
+    """
     line_id: str
     short_name: str
     direction: str
