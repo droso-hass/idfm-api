@@ -8,6 +8,7 @@ Usage
 Installation
 ------------
 
+This package is available on `PyPI <https://pypi.org/project/idfm-api/>`_ .
 To use IDFM-API, first install it using pip:
 
 .. code-block:: console
@@ -18,7 +19,7 @@ Usage
 -----
 
 You can use the ``cli.py`` file at the root of this repo to test this package in an interactive way.
-The documentations for the available functions is available here.
+The documentations for the available functions is available here: :doc:`idfm_api`
 
 Building
 --------

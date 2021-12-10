@@ -9,7 +9,7 @@ setup(
     package_data={
         'idfm-api': ['lines.json'],
     },
-    version='0.1.0',
+    version='0.1.1',
     author='drosocode',
     license='MIT',
     description='API for Ile de france mobilite',
