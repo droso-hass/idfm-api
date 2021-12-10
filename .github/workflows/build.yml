@@ -1,7 +1,8 @@
 name: Build and Publish python package
 
 on:
-  push:
+  release:
+    types: [created]
   workflow_call:
     secrets:
       PYPI_API_TOKEN:

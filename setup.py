@@ -23,4 +23,8 @@ setup(
     ],
     install_requires=["requests"],
     python_requires=">=3.7",
+    project_urls={
+        'Documentation': 'https://idfm-api.readthedocs.io/en/latest/',
+        'Source': 'https://github.com/droso-hass/idfm-api',
+    },
 )
