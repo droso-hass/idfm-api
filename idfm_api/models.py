@@ -23,6 +23,7 @@ class TransportType(Enum):
     METRO = "metro"
     TRAM = "tramway"
     TRAIN = "train"
+    BUS = "bus"
 
 @dataclass(frozen=True)
 class LineData:
