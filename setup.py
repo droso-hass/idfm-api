@@ -21,7 +21,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=["requests"],
+    install_requires=["aiohttp", "async_timeout"],
     python_requires=">=3.7",
     project_urls={
         'Documentation': 'https://idfm-api.readthedocs.io/en/latest/',
