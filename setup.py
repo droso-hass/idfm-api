@@ -4,12 +4,12 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='idfm-api',
-    packages=find_packages(include=['idfm-api']),
+    name='idfm_api',
+    packages=find_packages(include=['idfm_api']),
     package_data={
-        'idfm-api': ['lines.json'],
+        'idfm_api': ['lines.json'],
     },
-    version='0.2.2',
+    version='0.2.3',
     author='drosocode',
     license='MIT',
     description='API for Ile de france mobilite',
