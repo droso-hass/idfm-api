@@ -16,7 +16,7 @@ class InfoSeverity(IntEnum):
     CRICTICAL = 3 # blocking perturbation (max level)
 
 @unique
-class TransportType(Enum):
+class TransportType(str, Enum):
     """
     Represents the type of transport
     """
