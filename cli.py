@@ -19,7 +19,7 @@ async def main():
     stop = stops[int(input("Select stop area "))]
 
     print("\n")
-    directions = await idfm.get_directions(line.id)
+    directions = await idfm.get_directions(line.id, stop.id)
     for i, val in enumerate(directions):
         print(f"#{i} - {val}")
     d = input("Select direction (leave blank to display all) ")

@@ -69,7 +69,8 @@ class IDFMApi:
         Returns:
             A list of TrafficData objects
         """
-        data = (await self.__request(f"{BASE_URL}{line_id}/stops/{stop_id}/realTime"))["nextDepartures"]["data"]
+        d = f"{BASE_URL}{line_id}/stops/{stop_id}/realTime"
+        data = (await self.__request(d))["nextDepartures"]["data"]
         ret = []
         for i in data:
             d = TrafficData.from_json(i)
@@ -77,18 +78,19 @@ class IDFMApi:
                 ret.append(d)
         return sorted(ret)
 
-    async def get_directions(self, line_id: str, forward: Optional[bool] = None) -> List[str]:
+    async def get_directions(self, line_id: str, stop_id: str, forward: Optional[bool] = None) -> List[str]:
         """
         Returns the available destinations for a specified line
 
         Args:
             line_id: A string indicating the id of a line
+            stop_id: A string indicating the id of the depart stop area
             forward: A boolean indicating the direction of a train
         Returns:
             A list of string representing the stations names
         """
         ret = set()
-        for i in await self.get_traffic(line_id, (await self.get_stops(line_id))[0].id, forward=forward):
+        for i in await self.get_traffic(line_id, stop_id, forward=forward):
             ret.add(i.direction)
         return list(ret)
 

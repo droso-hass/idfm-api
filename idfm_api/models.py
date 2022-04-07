@@ -101,7 +101,7 @@ class TrafficData:
         if type(other) is datetime:
             return self.schedule < other
         elif type(other) is TrafficData:
-            return ((self.schedule is None or other.schedule is None) or self.schedule < other.schedule) or self.direction < other.direction
+            return ((self.schedule is None or other.schedule is None) or self.schedule < other.schedule) or ((self.direction is None or other.direction is None) or self.direction < other.direction)
         else:
             return NotImplemented
     
