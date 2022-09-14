@@ -7,7 +7,7 @@ setup(
     name='idfm_api',
     packages=find_packages(include=['idfm_api']),
     package_data={
-        'idfm_api': ['lines.json'],
+        'idfm_api': ['lines.json', 'stops.json'],
     },
     version='0.2.5',
     author='drosocode',
