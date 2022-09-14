@@ -23,9 +23,17 @@ for i in requests.get(STOP_AND_LINES).json():
     id = i["fields"]["id"].split(":")[1]
     if id not in line_to_stops:
         if id in line_ids:
-            line_to_stops[id] = {}
+            line_to_stops[id] = []
     else:
-        line_to_stops[id][i["fields"]["stop_name"]] = i["fields"]["stop_id"]
+        line_to_stops[id].append({
+            "id": i["fields"]["id"],
+            "stop_id": i["fields"]["stop_id"],
+            "name": i["fields"]["stop_name"],
+            "city": i["fields"]["nom_commune"],
+            "zipCode": i["fields"]["code_insee"],
+            "x": i["fields"]["stop_lat"],
+            "y": i["fields"]["stop_lon"],
+        })
 
 with open("idfm_api/lines.json", "w", encoding="utf8") as f:
     json.dump(lines, f, ensure_ascii=False)

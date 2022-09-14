@@ -7,13 +7,13 @@ import aiohttp
 import async_timeout
 import asyncio
 
-BASE_URL = "https://api-iv.iledefrance-mobilites.fr/lines/"
 TIMEOUT = 10
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class IDFMApi:
-    def __init__(self, session: aiohttp.ClientSession) -> None:
+    def __init__(self, session: aiohttp.ClientSession, apikey: str, use_global_request=False) -> None:
         self._session = session
+        self._apikey = apikey
 
     async def __request(self, url):
         """
@@ -25,14 +25,32 @@ class IDFMApi:
         """
         try:
             async with async_timeout.timeout(TIMEOUT):
-                response = await self._session.get(url)
+                response = await self._session.get(url, headers={
+                    "apiKey": self._apikey,
+                    "Content-Type": "application/json",
+                    "Accept-encoding": "gzip, deflate"
+                })
                 if response.status != 200:
-                    _LOGGER.error(
+                    _LOGGER.debug(
                         "Error while fetching information from %s - %s",
                         url,
                         response._body,
                     )
-                return await response.json()
+                resp = (await response.json())["Siri"]["ServiceDelivery"]
+                if "GeneralMessageDelivery" in resp:
+                    resp = resp["GeneralMessageDelivery"][0]
+                elif "StopMonitoringDelivery" in resp:
+                    resp = resp["StopMonitoringDelivery"][0]
+
+                if resp["Status"] == "false":
+                    _LOGGER.debug(
+                        "Error while fetching information from %s - %s",
+                        url,
+                        response._body,
+                    )
+                    return None
+                    
+                return resp
 
         except asyncio.TimeoutError as exception:
             _LOGGER.error(
@@ -51,46 +69,61 @@ class IDFMApi:
         Returns:
             A list of StopData objects
         """
-        data = await self.__request(f"{BASE_URL}{line_id}/stops?stopPoints=false&routes=false")
         ret = []
-        for i in data:
-            ret.append(StopData.from_json(i))
+        with importlib.resources.open_text("idfm_api", "stops.json", encoding="utf8") as f:
+            data = json.load(f)
+            if line_id in data:
+                for i in data[line_id]:
+                    ret.append(StopData.from_json(i))
         return ret
 
-    async def get_traffic(self, line_id: str, stop_id: str, direction_name: Optional[str] = None, forward: Optional[bool] = None) -> List[TrafficData]:
+    async def get_traffic(self, stop_id: str, destination_name: Optional[str] = None, direction_name: Optional[str] = None, refetch=False) -> List[TrafficData]:
         """
         Returns the next schedules in a line for a specified depart area to an optional destination
         
         Args:
-            line_id: A string representing the id of a line
             stop_id: A string indicating the id of the depart stop area
-            direction_name: A string indicating the final destination (I.E. the station name returned by get_directions), the schedules for all the available destinations are returned if not specified
-            forward: A boolean indicating the direction of a train (forward/backward), ignored if not specified
+            destination_name: A string indicating the final destination (I.E. the station name returned by get_directions), the schedules for all the available destinations are returned if not specified
+            direction_name: A boolean indicating the direction of a train, ignored if not specified
+            refetch: A boolean indicating if we should re-fetch the results from the API (only if using global request mode)
         Returns:
             A list of TrafficData objects
         """
-        d = f"{BASE_URL}{line_id}/stops/{stop_id}/realTime"
-        data = (await self.__request(d))["nextDepartures"]["data"]
+        d = f"https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:{stop_id.split(':')[-1]}:"
+        data = (await self.__request(d))["MonitoredStopVisit"]
         ret = []
         for i in data:
             d = TrafficData.from_json(i)
-            if (direction_name is None or d.direction == direction_name) and (forward is None or d.forward == forward):
+            if d and (direction_name is None or d.direction == direction_name) and (destination_name is None or d.destination_name == destination_name):
                 ret.append(d)
         return sorted(ret)
 
-    async def get_directions(self, line_id: str, stop_id: str, forward: Optional[bool] = None) -> List[str]:
+    async def get_destinations(self, stop_id: str, direction_name: Optional[str] = None) -> List[str]:
         """
         Returns the available destinations for a specified line
 
         Args:
-            line_id: A string indicating the id of a line
             stop_id: A string indicating the id of the depart stop area
-            forward: A boolean indicating the direction of a train
+            direction_name: The direction of a train
         Returns:
             A list of string representing the stations names
         """
         ret = set()
-        for i in await self.get_traffic(line_id, stop_id, forward=forward):
+        for i in await self.get_traffic(stop_id, direction_name=direction_name):
+            ret.add(i.destination_name)
+        return list(ret)
+
+    async def get_directions(self, stop_id: str) -> List[str]:
+        """
+        Returns the available directions for a specified line
+
+        Args:
+            stop_id: A string indicating the id of the depart stop area
+        Returns:
+            A list of string representing the stations names
+        """
+        ret = set()
+        for i in await self.get_traffic(stop_id):
             ret.add(i.direction)
         return list(ret)
 
@@ -104,9 +137,9 @@ class IDFMApi:
             A list of InfoData objects, the list is empty if no perturbations are registered
         """
         ret = []
-        data = await self.__request(f"{BASE_URL}{line_id}/schedules?complete=false")
-        if "currentIT" in data:
-            for i in data["currentIT"]:
+        data = await self.__request(f"https://prim.iledefrance-mobilites.fr/marketplace/general-message?LineRef=STIF:Line::{line_id}:")
+        if data:
+            for i in data["InfoMessage"]:
                 ret.append(InfoData.from_json(i))
         return ret
 
@@ -120,11 +153,9 @@ class IDFMApi:
             A list of LineData objects
         """
         ret = []
-        #with open("lines.json", "r", encoding="utf8") as f:
         with importlib.resources.open_text("idfm_api", "lines.json", encoding="utf8") as f:
             data = json.load(f)
-            for i in data.keys():
-                if transport is None or transport.value == i:
-                    for name, id in data[i].items():
-                        ret.append(LineData(name=name, id=id, type=TransportType(i)))
+            if transport.value in data:
+                for name, id in data[transport.value].items():
+                    ret.append(LineData(name=name, id=id, type=transport))
         return ret
