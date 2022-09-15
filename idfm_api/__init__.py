@@ -11,7 +11,7 @@ TIMEOUT = 10
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class IDFMApi:
-    def __init__(self, session: aiohttp.ClientSession, apikey: str, use_global_request=False) -> None:
+    def __init__(self, session: aiohttp.ClientSession, apikey: str) -> None:
         self._session = session
         self._apikey = apikey
 
@@ -77,7 +77,7 @@ class IDFMApi:
                     ret.append(StopData.from_json(i))
         return ret
 
-    async def get_traffic(self, stop_id: str, destination_name: Optional[str] = None, direction_name: Optional[str] = None, refetch=False) -> List[TrafficData]:
+    async def get_traffic(self, stop_id: str, destination_name: Optional[str] = None, direction_name: Optional[str] = None) -> List[TrafficData]:
         """
         Returns the next schedules in a line for a specified depart area to an optional destination
         
@@ -85,7 +85,6 @@ class IDFMApi:
             stop_id: A string indicating the id of the depart stop area
             destination_name: A string indicating the final destination (I.E. the station name returned by get_directions), the schedules for all the available destinations are returned if not specified
             direction_name: A boolean indicating the direction of a train, ignored if not specified
-            refetch: A boolean indicating if we should re-fetch the results from the API (only if using global request mode)
         Returns:
             A list of TrafficData objects
         """
