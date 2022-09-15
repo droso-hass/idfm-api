@@ -1,7 +1,7 @@
 # Ile de france mobilités API
 
 ## Description
-Python API wrapper for [Ile de France mobilités](https://me-deplacer.iledefrance-mobilites.fr/fiches-horaires)
+Python API wrapper for [Ile de France mobilités](https://prim.iledefrance-mobilites.fr/fr)
 
 Allows to retreive next schedules for a stations on a specific line and traffic informations for a line.
 Metro, RER, Transilien, Tram and BUS are supported.

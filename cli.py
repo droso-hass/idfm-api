@@ -5,9 +5,10 @@ import aiohttp
 
 async def main():
     session = aiohttp.ClientSession()
-    idfm = IDFMApi(session)
+    apikey = input("Enter API KEY:")
+    idfm = IDFMApi(session, apikey)
 
-    lines = await idfm.get_lines(TransportType.METRO)
+    lines = await idfm.get_lines(TransportType.TRAIN)
     for i, val in enumerate(lines):
         print(f"#{i} - {val.name}")
     line = lines[int(input("Select line "))]
@@ -19,7 +20,7 @@ async def main():
     stop = stops[int(input("Select stop area "))]
 
     print("\n")
-    directions = await idfm.get_directions(line.id, stop.id)
+    directions = await idfm.get_destinations(stop.id)
     for i, val in enumerate(directions):
         print(f"#{i} - {val}")
     d = input("Select direction (leave blank to display all) ")
@@ -27,13 +28,13 @@ async def main():
 
     print("\n")
     print("Traffic:")
-    for i in await idfm.get_traffic(line.id, stop.id, dir):
-        print(f"Line {i.short_name} - Direction {i.direction}: {i.schedule}") 
-
+    for i in await idfm.get_traffic(stop.id, destination_name=dir):
+        print(f"Line {i.line_id} {i.note} - Destination {i.destination_name}: {i.schedule}") 
+        
     print("\n")
     print("Informations:")
     for i in await idfm.get_infos(line.id):
-        print(f"{i.name} - Type {i.type} - Severity {i.severity.value}\nStart {i.start_time} - End {i.end_time}\n{i.message}")
+        print(f"{i.name} - Type {i.type} - Severity {i.severity}\nStart {i.start_time} - End {i.end_time}\n{i.message}")
 
     await session.close()
 

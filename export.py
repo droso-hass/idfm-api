@@ -1,38 +1,43 @@
 import requests
-from bs4 import BeautifulSoup
 import json
-import time
 
-BASE_URL = "https://me-deplacer.iledefrance-mobilites.fr/fiches-horaires/"
-BUS_URL = "https://api-iv.iledefrance-mobilites.fr/lines?q="
-items = ["train", "metro", "tramway"]
+LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
+STOP_AND_LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/arrets-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
 
-def get_lines(transport):
-    ret = {}
-    raw = requests.get(BASE_URL+transport).text
-    soup = BeautifulSoup(raw, features="html.parser")
-    resp = soup.find_all("a", {"class":"heading-block-transport-timetable"})
-    for i in resp:
-        link = i.attrs["href"]
-        ret[i.contents[1].getText()] = link[18+len(transport):link.find("?")].replace("%3A", ":")
-    return ret
+lines = {}
+line_ids = []
+for l in requests.get(LINES).json():
+    mode = l["fields"]["transportmode"]
+    if mode not in lines:
+        lines[mode] = {}
 
-def get_bus_lines():
-    lines = set()
-    for i in range(1,99):
-        for j in requests.get(BUS_URL + str(i)).json():
-            lines.add((f"{j['label']} - {j['network']['label']}", j["id"]))
-        time.sleep(0.5)
+    name = l["fields"]["name_line"]
+    if mode == "bus" and "operatorname" in l["fields"]:
+        name += " / " + l["fields"]["operatorname"]
 
-    ret = {}
-    for i in lines:
-        ret[i[0]] = i[1]
-    return ret
+    lines[mode][name] = l["fields"]["id_line"]
+    line_ids.append(l["fields"]["id_line"])
 
-data = {}
-for i in items:
-    data[i] = get_lines(i)
-data["bus"] = get_bus_lines()
+line_to_stops = {}
+for i in requests.get(STOP_AND_LINES).json():
+    id = i["fields"]["id"].split(":")[1]
+    if id not in line_to_stops:
+        if id in line_ids:
+            line_to_stops[id] = []
+    else:
+        line_to_stops[id].append({
+            "id": i["fields"]["id"],
+            "stop_id": i["fields"]["stop_id"],
+            "name": i["fields"]["stop_name"],
+            "city": i["fields"]["nom_commune"],
+            "zipCode": i["fields"]["code_insee"],
+            "x": i["fields"]["stop_lat"],
+            "y": i["fields"]["stop_lon"],
+        })
 
 with open("idfm_api/lines.json", "w", encoding="utf8") as f:
-    json.dump(data, f, ensure_ascii=False)
+    json.dump(lines, f, ensure_ascii=False)
+
+
+with open("idfm_api/stops.json", "w", encoding="utf8") as f:
+    json.dump(line_to_stops, f, ensure_ascii=False)

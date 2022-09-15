@@ -2,3 +2,5 @@ build
 dist
 idfm_api.egg-info
 __pycache__
+lines.json
+stops.json
