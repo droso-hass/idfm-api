@@ -97,7 +97,12 @@ class TrafficData:
         except KeyError:
             note = ""
 
-        if "ExpectedArrivalTime" not in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+        sch = None
+        if "ExpectedArrivalTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"], '%Y-%m-%dT%H:%M:%S.%fZ')
+        elif "ExpectedDepartureTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedDepartureTime"], '%Y-%m-%dT%H:%M:%S.%fZ')
+        else:
             return None
 
         return TrafficData(
@@ -106,7 +111,7 @@ class TrafficData:
             destination_name=data["MonitoredVehicleJourney"]["DestinationName"][0]["value"],
             destination_id=data["MonitoredVehicleJourney"]["DestinationRef"]["value"],
             direction=dir,
-            schedule=datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"], '%Y-%m-%dT%H:%M:%S.%fZ'),
+            schedule=sch,
             retarted=data["MonitoredVehicleJourney"]["MonitoredCall"].get("ArrivalStatus") in [None, "onTime"]
         )
 
