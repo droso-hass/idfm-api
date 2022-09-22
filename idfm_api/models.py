@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import total_ordering
 from enum import Enum, unique
 
@@ -65,8 +65,8 @@ class InfoData:
             name=name,
             id=data.get("id"),
             message=message,
-            start_time=datetime.strptime(data.get("RecordedAtTime"), '%Y-%m-%dT%H:%M:%S.%fZ'),
-            end_time=datetime.strptime(data.get("ValidUntilTime"), '%Y-%m-%dT%H:%M:%S.%fZ'),
+            start_time=datetime.strptime(data.get("RecordedAtTime"), '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc),
+            end_time=datetime.strptime(data.get("ValidUntilTime"), '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc),
             type=data["InfoChannelRef"]["value"],
             severity=data.get("InfoMessageVersion")
         )
@@ -99,9 +99,9 @@ class TrafficData:
 
         sch = None
         if "ExpectedArrivalTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"], '%Y-%m-%dT%H:%M:%S.%fZ')
+            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
         elif "ExpectedDepartureTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedDepartureTime"], '%Y-%m-%dT%H:%M:%S.%fZ')
+            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedDepartureTime"], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
         else:
             return None
 
