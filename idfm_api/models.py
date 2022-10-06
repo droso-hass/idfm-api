@@ -55,11 +55,13 @@ class InfoData:
     def from_json(data: dict):
         name = ""
         message = ""
-        for i in data["Content"]["Message"]:
-            if i["MessageType"] == "TEXT_ONLY":
-                message = i["MessageText"]["value"]
-            if i["MessageType"] == "SHORT_MESSAGE":
-                name = i["MessageText"]["value"]
+        if "Message" in data["Content"]:
+            for i in data["Content"]["Message"]:
+                if "MessageType" in i:
+                    if i["MessageType"] == "TEXT_ONLY":
+                        message = i["MessageText"]["value"]
+                    if i["MessageType"] == "SHORT_MESSAGE":
+                        name = i["MessageText"]["value"]
 
         return InfoData(
             name=name,
