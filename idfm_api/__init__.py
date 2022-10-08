@@ -7,13 +7,14 @@ import aiohttp
 import async_timeout
 import asyncio
 
-TIMEOUT = 10
+TIMEOUT = 60
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class IDFMApi:
-    def __init__(self, session: aiohttp.ClientSession, apikey: str) -> None:
+    def __init__(self, session: aiohttp.ClientSession, apikey: str, timeout: int = TIMEOUT) -> None:
         self._session = session
         self._apikey = apikey
+        self._timeout = timeout
 
     async def __request(self, url):
         """
@@ -24,7 +25,7 @@ class IDFMApi:
             A json object
         """
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with async_timeout.timeout(self._timeout):
                 response = await self._session.get(url, headers={
                     "apiKey": self._apikey,
                     "Content-Type": "application/json",
