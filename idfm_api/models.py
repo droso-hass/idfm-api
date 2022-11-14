@@ -86,6 +86,9 @@ class TrafficData:
     direction: str
     schedule: datetime
     retarted: bool
+    at_stop: bool
+    platform: str
+    status: str
 
     @staticmethod
     def from_json(data: dict):
@@ -107,6 +110,46 @@ class TrafficData:
         else:
             return None
 
+        try:
+            atstop = data["MonitoredVehicleJourney"]["MonitoredCall"]["VehicleAtStop"]
+        except KeyError:
+            atstop = None
+
+        try:
+            plat = data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalPlatformName"]["value"]
+        except KeyError:
+            plat = ""
+
+        stat_raw = None
+        if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            stat_raw = data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"]
+        elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            stat_raw = data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"]
+        else:
+            stat_raw = ""
+
+        def stat_transform(stat_raw):
+            # onTime | missed | arrived | notExpected | delayed | early | cancelled | noReport
+            match stat_raw:
+                case "onTime":
+                    return "On time"
+                case "missed":
+                    return "Missed"
+                case "arrived":
+                    return "Arrived"
+                case "notExpected":
+                    return "Not expected"
+                case "delayed":
+                    return "Delayed"
+                case "early":
+                    return "Arrived"
+                case "cancelled":
+                    return "Cancelled"
+                case "noReport":
+                    return "No report"
+                case _:
+                    return "Unknown"
+
         return TrafficData(
             line_id=data["MonitoredVehicleJourney"]["LineRef"]["value"],
             note=note,
@@ -114,7 +157,10 @@ class TrafficData:
             destination_id=data["MonitoredVehicleJourney"]["DestinationRef"]["value"],
             direction=dir,
             schedule=sch,
-            retarted=data["MonitoredVehicleJourney"]["MonitoredCall"].get("ArrivalStatus") in [None, "onTime"]
+            retarted=data["MonitoredVehicleJourney"]["MonitoredCall"].get("ArrivalStatus") in [None, "onTime"],
+            at_stop=atstop,
+            platform=plat,
+            status=stat_transform(stat_raw)
         )
 
     def __eq__(self, other):

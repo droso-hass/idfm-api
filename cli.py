@@ -29,7 +29,7 @@ async def main():
     print("\n")
     print("Traffic:")
     for i in await idfm.get_traffic(stop.id, destination_name=dir):
-        print(f"Line {i.line_id} {i.note} - Destination {i.destination_name}: {i.schedule}") 
+        print(f"Line {i.line_id} {i.note} - Destination {i.destination_name}: {i.schedule} - Currently at stop: {i.at_stop} - Platform: {i.platform} - Status: {i.status}") 
         
     print("\n")
     print("Informations:")
