@@ -13,6 +13,21 @@ class TransportType(str, Enum):
     TRAIN = "rail"
     BUS = "bus"
 
+@unique
+class TransportStatus(str, Enum):
+    """
+    Represents the status of a transport
+    """
+    ON_TIME = "onTime"
+    MISSED = "missed"
+    ARRIVED = "arrived"
+    NOT_EXPECTED = "notExpected"
+    DELAYED = "delayed"
+    EARLY = "early"
+    CANCELLED = "cancelled"
+    NO_REPORT = "noReport"
+    UNKNOWN = "unknown"
+
 @dataclass(frozen=True)
 class LineData:
     """
@@ -120,35 +135,12 @@ class TrafficData:
         except KeyError:
             plat = ""
 
-        stat_raw = None
         if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            stat_raw = data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"]
+            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"])
         elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            stat_raw = data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"]
+            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"])
         else:
-            stat_raw = ""
-
-        def stat_transform(stat_raw):
-            # onTime | missed | arrived | notExpected | delayed | early | cancelled | noReport
-            match stat_raw:
-                case "onTime":
-                    return "On time"
-                case "missed":
-                    return "Missed"
-                case "arrived":
-                    return "Arrived"
-                case "notExpected":
-                    return "Not expected"
-                case "delayed":
-                    return "Delayed"
-                case "early":
-                    return "Arrived"
-                case "cancelled":
-                    return "Cancelled"
-                case "noReport":
-                    return "No report"
-                case _:
-                    return "Unknown"
+            status = TransportStatus.UNKNOWN
 
         return TrafficData(
             line_id=data["MonitoredVehicleJourney"]["LineRef"]["value"],
@@ -157,10 +149,10 @@ class TrafficData:
             destination_id=data["MonitoredVehicleJourney"]["DestinationRef"]["value"],
             direction=dir,
             schedule=sch,
-            retarted=data["MonitoredVehicleJourney"]["MonitoredCall"].get("ArrivalStatus") in [None, "onTime"],
+            retarted=status not in [TransportStatus.ON_TIME, TransportStatus.ARRIVED, TransportStatus.UNKNOWN],
             at_stop=atstop,
             platform=plat,
-            status=stat_transform(stat_raw)
+            status=status
         )
 
     def __eq__(self, other):
