@@ -13,6 +13,21 @@ class TransportType(str, Enum):
     TRAIN = "rail"
     BUS = "bus"
 
+@unique
+class TransportStatus(str, Enum):
+    """
+    Represents the status of a transport
+    """
+    ON_TIME = "onTime"
+    MISSED = "missed"
+    ARRIVED = "arrived"
+    NOT_EXPECTED = "notExpected"
+    DELAYED = "delayed"
+    EARLY = "early"
+    CANCELLED = "cancelled"
+    NO_REPORT = "noReport"
+    UNKNOWN = "unknown"
+
 @dataclass(frozen=True)
 class LineData:
     """
@@ -86,6 +101,9 @@ class TrafficData:
     direction: str
     schedule: datetime
     retarted: bool
+    at_stop: bool
+    platform: str
+    status: str
 
     @staticmethod
     def from_json(data: dict):
@@ -107,6 +125,23 @@ class TrafficData:
         else:
             return None
 
+        try:
+            atstop = data["MonitoredVehicleJourney"]["MonitoredCall"]["VehicleAtStop"]
+        except KeyError:
+            atstop = None
+
+        try:
+            plat = data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalPlatformName"]["value"]
+        except KeyError:
+            plat = ""
+
+        if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"])
+        elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"])
+        else:
+            status = TransportStatus.UNKNOWN
+
         return TrafficData(
             line_id=data["MonitoredVehicleJourney"]["LineRef"]["value"],
             note=note,
@@ -114,7 +149,10 @@ class TrafficData:
             destination_id=data["MonitoredVehicleJourney"]["DestinationRef"]["value"],
             direction=dir,
             schedule=sch,
-            retarted=data["MonitoredVehicleJourney"]["MonitoredCall"].get("ArrivalStatus") in [None, "onTime"]
+            retarted=status not in [TransportStatus.ON_TIME, TransportStatus.ARRIVED, TransportStatus.UNKNOWN],
+            at_stop=atstop,
+            platform=plat,
+            status=status
         )
 
     def __eq__(self, other):
