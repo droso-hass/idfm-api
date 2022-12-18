@@ -32,7 +32,7 @@ class IDFMApi:
                     "Accept-encoding": "gzip, deflate"
                 })
                 if response.status != 200:
-                    _LOGGER.debug(
+                    _LOGGER.warn(
                         "Error while fetching information from %s - %s",
                         url,
                         response._body,
@@ -44,7 +44,7 @@ class IDFMApi:
                     resp = resp["StopMonitoringDelivery"][0]
 
                 if resp["Status"] == "false":
-                    _LOGGER.debug(
+                    _LOGGER.warn(
                         "Error while fetching information from %s - %s",
                         url,
                         response._body,
