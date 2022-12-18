@@ -109,12 +109,12 @@ class TrafficData:
     def from_json(data: dict):
         try:
             dir = data["MonitoredVehicleJourney"]["DirectionName"][0]["value"]
-        except KeyError:
+        except (KeyError, IndexError):
             dir = data["MonitoredVehicleJourney"]["DestinationName"][0]["value"]
 
         try:
             note = data["MonitoredVehicleJourney"]["JourneyNote"][0]["value"]
-        except KeyError:
+        except (KeyError, IndexError):
             note = ""
 
         sch = None
@@ -135,9 +135,9 @@ class TrafficData:
         except KeyError:
             plat = ""
 
-        if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+        if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"] and data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"] != "":
             status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"])
-        elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
+        elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"] and data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"] != "":
             status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"])
         else:
             status = TransportStatus.UNKNOWN
