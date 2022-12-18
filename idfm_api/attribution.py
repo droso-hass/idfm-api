@@ -5,4 +5,6 @@ IDFM_DB_SOURCES = {
     "Référentiel des lignes de transport en commun d’île-de-France": "https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes",
     "Référentiel des arrêts : Relations": "https://data.iledefrance-mobilites.fr/explore/dataset/relations"
 }
+IDFM_API_LICENCE = "Licence Mobilité"
+IDFM_API_LICENCE_LINK = "https://cloud.fabmob.io/s/eYWWJBdM3fQiFNm"
 IDFM_API_LINK = "https://prim.iledefrance-mobilites.fr/fr/donnees-dynamiques/idfm-ivtr-requete_unitaire"
