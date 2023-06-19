@@ -23,6 +23,8 @@ class IDFMApi:
             url: the url to request
         Returns:
             A json object
+        Raises:
+            UnknownIdentifierException
         """
         try:
             async with async_timeout.timeout(self._timeout):
@@ -32,6 +34,12 @@ class IDFMApi:
                     "Accept-encoding": "gzip, deflate"
                 })
                 if response.status != 200:
+                    try:
+                        err = (await response.json())["Siri"]["ServiceDelivery"]["StopMonitoringDelivery"][0]["ErrorCondition"]["ErrorInformation"]["ErrorText"]
+                        if err == "Le couple MonitoringRef/LineRef n'existe pas" or err == "La requête contient des identifiants qui sont inconnus":
+                            raise UnknownIdentifierException()
+                    except KeyError:
+                        pass
                     _LOGGER.warn(
                         "Error while fetching information from %s - %s",
                         url,
@@ -59,8 +67,6 @@ class IDFMApi:
                 url,
                 exception,
             )
-        except Exception as exception:  # pylint: disable=broad-except
-            _LOGGER.error("Something really wrong happened! - %s", exception)
 
     async def get_stops(self, line_id: str) -> List[StopData]:
         """
@@ -78,7 +84,7 @@ class IDFMApi:
                     ret.append(StopData.from_json(i))
         return ret
 
-    async def get_traffic(self, stop_id: str, destination_name: Optional[str] = None, direction_name: Optional[str] = None) -> List[TrafficData]:
+    async def get_traffic(self, stop_id: str, destination_name: Optional[str] = None, direction_name: Optional[str] = None, line_id: Optional[str] = None) -> List[TrafficData]:
         """
         Returns the next schedules in a line for a specified depart area to an optional destination
         
@@ -86,30 +92,39 @@ class IDFMApi:
             stop_id: A string indicating the id of the depart stop area
             destination_name: A string indicating the final destination (I.E. the station name returned by get_directions), the schedules for all the available destinations are returned if not specified
             direction_name: A boolean indicating the direction of a train, ignored if not specified
+            line_id: A string indicating id of a line (if not specified, all schedules for this stop/direction will be returned regardless of the line)
         Returns:
             A list of TrafficData objects
         """
-        d = f"https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef=STIF:StopPoint:Q:{stop_id.split(':')[-1]}:"
-        data = (await self.__request(d))["MonitoredStopVisit"]
+        line = f"&LineRef=STIF:Line::{line_id}:" if line_id is not None else ""
+        request = f"https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef={stop_id}"
+        try:
+            response = await self.__request(request+line)
+        except UnknownIdentifierException:
+            # if the MonitoringRef/LineRef couple does not exists, fallback to use only the MonitoringRef
+            _LOGGER.debug("unknown MonitoringRef/LineRef coupe, falling back to only MonitoringRef")
+            response = await self.__request(request)
+        
         ret = []
-        for i in data:
+        for i in response["MonitoredStopVisit"]:
             d = TrafficData.from_json(i)
             if d and (direction_name is None or d.direction == direction_name) and (destination_name is None or d.destination_name == destination_name):
                 ret.append(d)
         return sorted(ret)
 
-    async def get_destinations(self, stop_id: str, direction_name: Optional[str] = None) -> List[str]:
+    async def get_destinations(self, stop_id: str, direction_name: Optional[str] = None, line_id: Optional[str] = None) -> List[str]:
         """
         Returns the available destinations for a specified line
 
         Args:
             stop_id: A string indicating the id of the depart stop area
             direction_name: The direction of a train
+            line_id: A string indicating id of a line (if not specified, all schedules for this stop/direction will be returned regardless of the line)
         Returns:
             A list of string representing the stations names
         """
         ret = set()
-        for i in await self.get_traffic(stop_id, direction_name=direction_name):
+        for i in await self.get_traffic(stop_id, direction_name=direction_name, line_id=line_id):
             ret.add(i.destination_name)
         return list(ret)
 
@@ -159,3 +174,9 @@ class IDFMApi:
                 for name, id in data[transport.value].items():
                     ret.append(LineData(name=name, id=id, type=transport))
         return ret
+
+class UnknownIdentifierException(Exception):
+    """
+    Exception raised when the identifier (MonitoringRef/LineRef) is unknown
+    """
+    pass

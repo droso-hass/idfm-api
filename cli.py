@@ -18,9 +18,10 @@ async def main():
     for i, val in enumerate(stops):
         print(f"#{i} - {val.name}")
     stop = stops[int(input("Select stop area "))]
+    stop_id = stop.exchange_area_id or stop.stop_id
 
     print("\n")
-    directions = await idfm.get_destinations(stop.id)
+    directions = await idfm.get_destinations(stop_id, line_id=line.id)
     for i, val in enumerate(directions):
         print(f"#{i} - {val}")
     d = input("Select direction (leave blank to display all) ")
@@ -28,7 +29,7 @@ async def main():
 
     print("\n")
     print("Traffic:")
-    for i in await idfm.get_traffic(stop.id, destination_name=dir):
+    for i in await idfm.get_traffic(stop_id, destination_name=dir, line_id=line.id):
         print(f"Line {i.line_id} {i.note} - Destination {i.destination_name}: {i.schedule} - Currently at stop: {i.at_stop} - Platform: {i.platform} - Status: {i.status}") 
         
     print("\n")
