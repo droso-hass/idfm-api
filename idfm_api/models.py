@@ -3,21 +3,25 @@ from datetime import datetime, timezone
 from functools import total_ordering
 from enum import Enum, unique
 
+
 @unique
 class TransportType(str, Enum):
     """
     Represents the type of transport
     """
+
     METRO = "metro"
     TRAM = "tram"
     TRAIN = "rail"
     BUS = "bus"
+
 
 @unique
 class TransportStatus(str, Enum):
     """
     Represents the status of a transport
     """
+
     ON_TIME = "onTime"
     MISSED = "missed"
     ARRIVED = "arrived"
@@ -28,36 +32,53 @@ class TransportStatus(str, Enum):
     NO_REPORT = "noReport"
     UNKNOWN = "unknown"
 
+
 @dataclass(frozen=True)
 class LineData:
     """
     Represents a line of a transport
     """
+
     name: str
     id: str
     type: TransportType
+
 
 @dataclass(frozen=True)
 class StopData:
     """
     Represents a stop area of a line
     """
+
     name: str
-    id: str
+    stop_id: str
     x: float
     y: float
     zip_code: str
     city: str
+    exchange_area_id: str
+    exchange_area_name: str
 
     @staticmethod
     def from_json(data: dict):
-        return StopData(name=data.get("name"), id=data.get("stop_id"), x=data.get("x"), y=data.get("y"), zip_code=data.get("zipCode"), city=data.get("city"))
+        return StopData(
+            name=data.get("name"),
+            stop_id=data.get("stop_id"),
+            x=data.get("x"),
+            y=data.get("y"),
+            zip_code=data.get("zipCode"),
+            city=data.get("city"),
+            exchange_area_id=data.get("exchange_area_id"),
+            exchange_area_name=data.get("exchange_area_name"),
+        )
+
 
 @dataclass(frozen=True)
 class InfoData:
     """
     Represents a traffic information fragment
     """
+
     id: str
     name: str
     message: str
@@ -82,11 +103,16 @@ class InfoData:
             name=name,
             id=data.get("id"),
             message=message,
-            start_time=datetime.strptime(data.get("RecordedAtTime"), '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc),
-            end_time=datetime.strptime(data.get("ValidUntilTime"), '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc),
+            start_time=datetime.strptime(
+                data.get("RecordedAtTime"), "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc),
+            end_time=datetime.strptime(
+                data.get("ValidUntilTime"), "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(tzinfo=timezone.utc),
             type=data["InfoChannelRef"]["value"],
-            severity=data.get("InfoMessageVersion")
+            severity=data.get("InfoMessageVersion"),
         )
+
 
 @dataclass(frozen=True)
 @total_ordering
@@ -94,6 +120,7 @@ class TrafficData:
     """
     Represents a schedule for a specific path
     """
+
     line_id: str
     note: str
     destination_name: str
@@ -119,9 +146,19 @@ class TrafficData:
 
         sch = None
         if "ExpectedArrivalTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
-        elif "ExpectedDepartureTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]:
-            sch = datetime.strptime(data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedDepartureTime"], '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=timezone.utc)
+            sch = datetime.strptime(
+                data["MonitoredVehicleJourney"]["MonitoredCall"]["ExpectedArrivalTime"],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            ).replace(tzinfo=timezone.utc)
+        elif (
+            "ExpectedDepartureTime" in data["MonitoredVehicleJourney"]["MonitoredCall"]
+        ):
+            sch = datetime.strptime(
+                data["MonitoredVehicleJourney"]["MonitoredCall"][
+                    "ExpectedDepartureTime"
+                ],
+                "%Y-%m-%dT%H:%M:%S.%fZ",
+            ).replace(tzinfo=timezone.utc)
         else:
             return None
 
@@ -131,33 +168,57 @@ class TrafficData:
             atstop = None
 
         try:
-            plat = data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalPlatformName"]["value"]
+            plat = data["MonitoredVehicleJourney"]["MonitoredCall"][
+                "ArrivalPlatformName"
+            ]["value"]
         except KeyError:
             plat = ""
 
-        if "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"] and data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"] != "":
-            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"])
-        elif "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"] and data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"] != "":
-            status = TransportStatus(data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"])
+        if (
+            "ArrivalStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]
+            and data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"] != ""
+        ):
+            status = TransportStatus(
+                data["MonitoredVehicleJourney"]["MonitoredCall"]["ArrivalStatus"]
+            )
+        elif (
+            "DepartureStatus" in data["MonitoredVehicleJourney"]["MonitoredCall"]
+            and data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"]
+            != ""
+        ):
+            status = TransportStatus(
+                data["MonitoredVehicleJourney"]["MonitoredCall"]["DepartureStatus"]
+            )
         else:
             status = TransportStatus.UNKNOWN
 
         return TrafficData(
             line_id=data["MonitoredVehicleJourney"]["LineRef"]["value"],
             note=note,
-            destination_name=data["MonitoredVehicleJourney"]["DestinationName"][0]["value"],
+            destination_name=data["MonitoredVehicleJourney"]["DestinationName"][0][
+                "value"
+            ],
             destination_id=data["MonitoredVehicleJourney"]["DestinationRef"]["value"],
             direction=dir,
             schedule=sch,
-            retarted=status not in [TransportStatus.ON_TIME, TransportStatus.ARRIVED, TransportStatus.UNKNOWN],
+            retarted=status
+            not in [
+                TransportStatus.ON_TIME,
+                TransportStatus.ARRIVED,
+                TransportStatus.UNKNOWN,
+            ],
             at_stop=atstop,
             platform=plat,
-            status=status
+            status=status,
         )
 
     def __eq__(self, other):
         if type(other) is TrafficData:
-            return self.schedule == other.schedule and self.line_id == other.line_id and self.destination_id == other.destination_id
+            return (
+                self.schedule == other.schedule
+                and self.line_id == other.line_id
+                and self.destination_id == other.destination_id
+            )
         else:
             return False
 
@@ -165,7 +226,12 @@ class TrafficData:
         if type(other) is datetime:
             return self.schedule < other
         elif type(other) is TrafficData:
-            return ((self.schedule is None or other.schedule is None) or self.schedule < other.schedule) or ((self.destination_name is None or other.destination_name is None) or self.destination_name < other.destination_name)
+            return (
+                (self.schedule is None or other.schedule is None)
+                or self.schedule < other.schedule
+            ) or (
+                (self.destination_name is None or other.destination_name is None)
+                or self.destination_name < other.destination_name
+            )
         else:
             return NotImplemented
-    

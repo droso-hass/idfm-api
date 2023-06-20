@@ -4,6 +4,7 @@ import json
 LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
 STOP_AND_LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/arrets-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
 STOP_RELATIONS = "https://data.iledefrance-mobilites.fr/explore/dataset/relations/download/?format=json&timezone=Europe/Berlin&lang=fr"
+EXCHANGE_AREAS = "https://data.iledefrance-mobilites.fr/api/explore/v2.1/catalog/datasets/zones-de-correspondance/exports/json?lang=fr&timezone=Europe/Berlin"
 
 lines = {}
 line_ids = []
@@ -19,13 +20,20 @@ for l in requests.get(LINES).json():
     lines[mode][name] = l["fields"]["id_line"]
     line_ids.append(l["fields"]["id_line"])
 
-relations = {}
+arid_to_zdaid = {}
+zdaid_to_zdcid = {}
 for i in requests.get(STOP_RELATIONS).json():
     try:
-        relations[i["fields"]["arrid"]] = i["fields"]["zdaid"]
+        arid_to_zdaid[i["fields"]["arrid"]] = i["fields"]["zdaid"]
+        zdaid_to_zdcid[i["fields"]["zdaid"]] = i["fields"]["zdcid"]
     except KeyError:
         pass
 
+zdc = {}
+for i in requests.get(EXCHANGE_AREAS).json():
+    zdc[i["zdcid"]] = i
+
+# map line to stops
 line_to_stops = {}
 stop_ids = {}
 for i in requests.get(STOP_AND_LINES).json():
@@ -38,14 +46,21 @@ for i in requests.get(STOP_AND_LINES).json():
         stop_id = i["fields"]["stop_id"]
         if stop_id.find("monomodalStopPlace") == -1:
             try:
-                stop_id = relations[stop_id.split(":")[-1]]
+                stop_id = arid_to_zdaid[stop_id.split(":")[-1]]
             except KeyError:
                 pass
+        else:
+            stop_id = stop_id[24:]
+
+        # try to find the corresponding Exchange Area ID (ZdCId)
+        zdcid = zdaid_to_zdcid.get(stop_id)
         
         if stop_id not in stop_ids[id]:
             line_to_stops[id].append({
                 "id": i["fields"]["id"],
-                "stop_id": stop_id,
+                "exchange_area_id": None if zdcid is None else "STIF:StopArea:SP:"+zdcid+":",
+                "exchange_area_name": None if zdcid is None else zdc[zdcid]["zdcname"],
+                "stop_id": "STIF:StopPoint:Q:"+stop_id+":",
                 "name": i["fields"]["stop_name"],
                 "city": i["fields"]["nom_commune"],
                 "zipCode": i["fields"]["code_insee"],
@@ -54,8 +69,17 @@ for i in requests.get(STOP_AND_LINES).json():
             })
             stop_ids[id].append(stop_id)
 
+# remove lines with no associated stops
+filtered_lines = {}
+for mode, data in lines.items():
+    for name, value in data.items():
+        if value in line_to_stops:
+            if mode not in filtered_lines:
+                filtered_lines[mode] = {}
+            filtered_lines[mode][name] = value
+
 with open("idfm_api/lines.json", "w", encoding="utf8") as f:
-    json.dump(lines, f, ensure_ascii=False)
+    json.dump(filtered_lines, f, ensure_ascii=False)
 
 
 with open("idfm_api/stops.json", "w", encoding="utf8") as f:
