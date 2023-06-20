@@ -124,7 +124,7 @@ class IDFMApi:
         Args:
             stop_id: A string indicating the id of the depart stop area
             direction_name: The direction of a train
-            line_id: A string indicating id of a line (if not specified, all schedules for this stop/direction will be returned regardless of the line)
+            line_id: A string indicating id of a line (if not specified, all destinations for this stop will be returned regardless of the line)
         Returns:
             A list of string representing the stations names
         """
@@ -133,17 +133,18 @@ class IDFMApi:
             ret.add(i.destination_name)
         return list(ret)
 
-    async def get_directions(self, stop_id: str) -> List[str]:
+    async def get_directions(self, stop_id: str, line_id: Optional[str] = None) -> List[str]:
         """
         Returns the available directions for a specified line
 
         Args:
             stop_id: A string indicating the id of the depart stop area
+            line_id: A string indicating id of a line (if not specified, all directions for this stop will be returned regardless of the line)
         Returns:
             A list of string representing the stations names
         """
         ret = set()
-        for i in await self.get_traffic(stop_id):
+        for i in await self.get_traffic(stop_id, line_id=line_id):
             ret.add(i.direction)
         return list(ret)
 
