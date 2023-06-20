@@ -39,10 +39,10 @@ stop_ids = {}
 for i in requests.get(STOP_AND_LINES).json():
     id = i["fields"]["id"].split(":")[1]
     if id not in line_to_stops:
-        if id in line_ids:
-            line_to_stops[id] = []
-            stop_ids[id] = []
-    else:
+        line_to_stops[id] = []
+        stop_ids[id] = []
+
+    if id in line_ids:
         stop_id = i["fields"]["stop_id"]
         if stop_id.find("monomodalStopPlace") == -1:
             try:
@@ -57,7 +57,6 @@ for i in requests.get(STOP_AND_LINES).json():
         
         if stop_id not in stop_ids[id]:
             line_to_stops[id].append({
-                "id": i["fields"]["id"],
                 "exchange_area_id": None if zdcid is None else "STIF:StopArea:SP:"+zdcid+":",
                 "exchange_area_name": None if zdcid is None else zdc[zdcid]["zdcname"],
                 "stop_id": "STIF:StopPoint:Q:"+stop_id+":",
