@@ -99,7 +99,7 @@ class IDFMApi:
 
         # for backward compatibility where only the stoppoint id is specified
         if stop_id[0:4] != "STIF":
-            stop_id = f"STIF:StopPoint:Q:{stop_id}:"
+            stop_id = f"STIF:StopPoint:Q:{stop_id.split(':')[-1]}:"
         
         line = f"&LineRef=STIF:Line::{line_id}:" if line_id is not None else ""
         request = f"https://prim.iledefrance-mobilites.fr/marketplace/stop-monitoring?MonitoringRef={stop_id}"
