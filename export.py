@@ -33,7 +33,7 @@ zdc = {}
 for i in requests.get(EXCHANGE_AREAS).json():
     zdc[i["zdcid"]] = i
 
-# map line to stops (by order of preference: ExchangeAreaID (ZdCId), StopAreaID (ZdAid), StopID (ArId))
+# map line to stops
 line_to_stops = {}
 stop_ids = {}
 for i in requests.get(STOP_AND_LINES).json():
@@ -52,6 +52,7 @@ for i in requests.get(STOP_AND_LINES).json():
         else:
             stop_id = stop_id[24:]
 
+        # try to find the corresponding Exchange Area ID (ZdCId)
         zdcid = zdaid_to_zdcid.get(stop_id)
         
         if stop_id not in stop_ids[id]:
@@ -68,8 +69,17 @@ for i in requests.get(STOP_AND_LINES).json():
             })
             stop_ids[id].append(stop_id)
 
+# remove lines with no associated stops
+filtered_lines = {}
+for mode, data in lines.items():
+    for name, value in data.items():
+        if value in line_to_stops:
+            if mode not in filtered_lines:
+                filtered_lines[mode] = {}
+            filtered_lines[mode][name] = value
+
 with open("idfm_api/lines.json", "w", encoding="utf8") as f:
-    json.dump(lines, f, ensure_ascii=False)
+    json.dump(filtered_lines, f, ensure_ascii=False)
 
 
 with open("idfm_api/stops.json", "w", encoding="utf8") as f:
