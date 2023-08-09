@@ -1,6 +1,22 @@
 import requests
 import json
 
+"""
+Export Script used to generate lines.json and stops.json
+
+The first file contains a list of all the lines id for each transport category
+The second contains a mapping of the line id to a list of all the stops for this line
+
+To find a list of all the stops we need to use multiple datasets:
+LINES
+ -> get line ID
+ -> STOP_AND_LINES -> get corresponding stops areas for trains (ZdAId) OR get corresponding stops points for other modes (ArRId)
+ -> STOP_RELATIONS -> map the ArRid to ZdAId AND map the ZdAId to the exchange area (ZdCId) 
+ -> EXCHANGE_AREAS -> get the exchange area data
+
+So the process looks like this: LineID -> ZdAId -> ZdCId OR LineID -> ArId -> ZdAId -> ZdCId
+"""
+
 LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
 STOP_AND_LINES = "https://data.iledefrance-mobilites.fr/explore/dataset/arrets-lignes/download/?format=json&timezone=Europe/Berlin&lang=fr"
 STOP_RELATIONS = "https://data.iledefrance-mobilites.fr/explore/dataset/relations/download/?format=json&timezone=Europe/Berlin&lang=fr"
@@ -25,6 +41,9 @@ zdaid_to_zdcid = {}
 for i in requests.get(STOP_RELATIONS).json():
     try:
         arid_to_zdaid[i["fields"]["arrid"]] = i["fields"]["zdaid"]
+    except KeyError:
+        pass
+    try:
         zdaid_to_zdcid[i["fields"]["zdaid"]] = i["fields"]["zdcid"]
     except KeyError:
         pass
