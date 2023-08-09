@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum, unique
 from functools import total_ordering
+from zoneinfo import ZoneInfo
 
 from idfm_api.utils import strip_html
 
@@ -147,8 +148,12 @@ class ReportData:
         for i in data["application_periods"]:
             periods.append(
                 (
-                    datetime.strptime(i["begin"], "%Y%m%dT%H%M%S"),
-                    datetime.strptime(i["end"], "%Y%m%dT%H%M%S"),
+                    datetime.strptime(i["begin"], "%Y%m%dT%H%M%S").replace(
+                        tzinfo=ZoneInfo("Europe/Paris")
+                    ),
+                    datetime.strptime(i["end"], "%Y%m%dT%H%M%S").replace(
+                        tzinfo=ZoneInfo("Europe/Paris")
+                    ),
                 )
             )
 
