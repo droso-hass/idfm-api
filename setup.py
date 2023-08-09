@@ -6,9 +6,6 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='idfm_api',
     packages=find_packages(include=['idfm_api']),
-    package_data={
-        'idfm_api': ['lines.json', 'stops.json'],
-    },
     version='0.0.0',
     author='drosocode',
     license='MIT',

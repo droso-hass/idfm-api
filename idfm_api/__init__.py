@@ -1,12 +1,11 @@
 import asyncio
-import importlib.resources
-import json
 import logging
 from typing import List, Optional
 
 import aiohttp
 import async_timeout
 
+from idfm_api.dataset import Dataset
 from idfm_api.models import (
     InfoData,
     LineData,
@@ -136,13 +135,10 @@ class IDFMApi:
             A list of StopData objects
         """
         ret = []
-        with importlib.resources.open_text(
-            "idfm_api", "stops.json", encoding="utf8"
-        ) as f:
-            data = json.load(f)
-            if line_id in data:
-                for i in data[line_id]:
-                    ret.append(StopData.from_json(i))
+        data = await Dataset.get_stops(self._session)
+        if line_id in data:
+            for i in data[line_id]:
+                ret.append(StopData.from_json(i))
         return ret
 
     async def get_traffic(
@@ -288,13 +284,10 @@ class IDFMApi:
             A list of LineData objects
         """
         ret = []
-        with importlib.resources.open_text(
-            "idfm_api", "lines.json", encoding="utf8"
-        ) as f:
-            data = json.load(f)
-            if transport.value in data:
-                for name, id in data[transport.value].items():
-                    ret.append(LineData(name=name, id=id, type=transport))
+        data = await Dataset.get_lines(self._session)
+        if transport.value in data:
+            for name, id in data[transport.value].items():
+                ret.append(LineData(name=name, id=id, type=transport))
         return ret
 
 
