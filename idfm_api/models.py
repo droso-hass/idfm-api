@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from functools import total_ordering
 from enum import Enum, unique
+from functools import total_ordering
+
+from idfm_api.utils import strip_html
 
 
 @unique
@@ -111,6 +113,55 @@ class InfoData:
             ).replace(tzinfo=timezone.utc),
             type=data["InfoChannelRef"]["value"],
             severity=data.get("InfoMessageVersion"),
+        )
+
+
+@dataclass(frozen=True)
+class ReportData:
+    """
+    Represents a traffic information fragment (navitia version)
+    """
+
+    id: str
+    name: str
+    message: str
+    periods: list[(datetime, datetime)]
+    severity: int
+    effect: str
+    category: str
+    cause: str
+    type: str
+
+    @staticmethod
+    def from_json(data: dict):
+        name = ""
+        message = ""
+        if "messages" in data:
+            for i in data["messages"]:
+                if i["channel"]["name"] == "titre":
+                    name = i["text"]
+                elif i["channel"]["name"] == "moteur":
+                    message = strip_html(i["text"])
+
+        periods = []
+        for i in data["application_periods"]:
+            periods.append(
+                (
+                    datetime.strptime(i["begin"], "%Y%m%dT%H%M%S"),
+                    datetime.strptime(i["end"], "%Y%m%dT%H%M%S"),
+                )
+            )
+
+        return ReportData(
+            name=name,
+            id=data.get("id"),
+            message=message,
+            periods=periods,
+            category=data.get("category"),
+            cause=data.get("cause"),
+            severity=data["severity"]["priority"],
+            effect=data["severity"]["effect"],
+            type=data["severity"]["name"],
         )
 
 

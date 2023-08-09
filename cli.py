@@ -37,6 +37,11 @@ async def main():
     for i in await idfm.get_infos(line.id):
         print(f"{i.name} - Type {i.type} - Severity {i.severity}\nStart {i.start_time} - End {i.end_time}\n{i.message}")
 
+    print("\n")
+    print("Informations (Navita):")
+    for i in await idfm.get_line_reports(line.id, exclude_elevator=True):
+        print(f"{i.name} - Type {i.type} - Severity {i.severity}\nStart {i.periods[0][0]} - End {i.periods[-1][1]}\n{i.message}\n")
+
     await session.close()
 
 loop = asyncio.get_event_loop()
