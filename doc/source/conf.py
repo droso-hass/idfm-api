@@ -30,7 +30,7 @@ author = 'drosocode'
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinxcontrib.napoleon",
+    "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints"
 ]
 

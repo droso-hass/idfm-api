@@ -4,6 +4,14 @@ idfm\_api package
 Submodules
 ----------
 
+idfm\_api.dataset module
+----------------------
+
+.. automodule:: idfm_api.dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 idfm\_api.models module
 -----------------------
 
