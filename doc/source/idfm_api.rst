@@ -5,7 +5,7 @@ Submodules
 ----------
 
 idfm\_api.dataset module
-----------------------
+------------------------
 
 .. automodule:: idfm_api.dataset
    :members:
