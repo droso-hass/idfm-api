@@ -260,7 +260,7 @@ class IDFMApi:
         """
         ret = []
         data = await self.__navitia_request(
-            f"https://prim.iledefrance-mobilites.fr/marketplace/navitia/line_reports/coverage/fr-idf/lines%2Fline%3AIDFM%3A{line_id}/line_reports"
+            f"https://prim.iledefrance-mobilites.fr/marketplace/v2/navitia/lines%2Fline%3AIDFM%3A{line_id}/line_reports"
         )
         if data:
             for i in data["disruptions"]:
